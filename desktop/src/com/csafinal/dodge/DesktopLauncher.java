@@ -2,7 +2,6 @@ package com.csafinal.dodge;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.csafinal.dodge.Game;
 
 // Please note that on macOS your application needs to be started with the -XstartOnFirstThread JVM argument
 public class DesktopLauncher {
@@ -10,6 +9,9 @@ public class DesktopLauncher {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setForegroundFPS(60);
 		config.setTitle("Dodge");
-		new Lwjgl3Application(new Game(), config);
+		config.useVsync(true);
+		config.setWindowedMode(800,480);
+		config.setResizable(false);
+		new Lwjgl3Application(new Dodge(), config);
 	}
 }
