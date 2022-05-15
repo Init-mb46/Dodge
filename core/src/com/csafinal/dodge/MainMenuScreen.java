@@ -5,9 +5,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.sun.org.apache.xpath.internal.operations.Or;
-
-import java.security.Key;
 
 public class MainMenuScreen implements Screen {
     final Dodge game;
