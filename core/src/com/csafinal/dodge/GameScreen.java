@@ -9,7 +9,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -25,7 +27,13 @@ public class GameScreen implements Screen {
 	Music rainMusic;
 	OrthographicCamera camera;
 	Rectangle bucket;
-	Array<Rectangle> rainDrops;
+	Array<RainDrop> rainDrops;
+	Pool<RainDrop> dropPool = new Pool<RainDrop>() {
+		@Override
+		protected RainDrop newObject() {
+			return new RainDrop();
+		}
+	};
 	long lastDropTime;
 	int dropsCollected;
 	long gameStartTime;
@@ -51,8 +59,7 @@ public class GameScreen implements Screen {
 		bucket.width = 64;
 		bucket.height = 64;
 
-		rainDrops = new Array<>();
-		spawnRaindrop();
+		rainDrops = new Array<RainDrop>();
 	}
 
 	@Override
@@ -84,19 +91,21 @@ public class GameScreen implements Screen {
 
 		if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
 			int deltaG = (int) ((TimeUtils.millis() - gameStartTime) / 1000);
-			int numDrops = (int) MathUtils.log(MathUtils.E,deltaG * .4f);
+			int numDrops = 1 + (int) MathUtils.log(MathUtils.E,deltaG * .2f);
 			for (int i = 0; i < numDrops; i++) spawnRaindrop();
-			spawnRaindrop();
 		}
 
-		for (Iterator<Rectangle> iter = rainDrops.iterator(); iter.hasNext();) {
-			Rectangle drop = iter.next();
+		for (Iterator<RainDrop> iter = rainDrops.iterator(); iter.hasNext();) {
+			RainDrop drop = iter.next();
 			drop.y -= 200 * Gdx.graphics.getDeltaTime();
-			if(drop.y + 64 < 0) iter.remove();
-
-			if(drop.intersects(bucket)) {
+			if(drop.y + 64 < 0) {
+				iter.remove();
+				dropPool.free(drop);
+			}
+			if(drop.overlaps(bucket)) {
 				dropSound.play();
 				iter.remove();
+				dropPool.free(drop);
 				dropsCollected++;
 			}
 		}
@@ -136,9 +145,8 @@ public class GameScreen implements Screen {
 	}
 
 	public void spawnRaindrop() {
-		Rectangle drop = new Rectangle();
-		drop.x = MathUtils.random(0,800-64);
-		drop.y = MathUtils.random(480,700);
+		RainDrop drop = dropPool.obtain();
+		drop.init(MathUtils.random(0,800-64),MathUtils.random(480,700));
 		drop.width = 64;
 		drop.height = 64;
 		rainDrops.add(drop);
